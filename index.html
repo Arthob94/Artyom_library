@@ -129,9 +129,9 @@
 
 
     <script>
-        const MY_SERVER_BOOKS = "http://127.0.0.1:5000/books/"
-        const MY_SERVER_CUSTOMERS = "http://127.0.0.1:5000/customers/"
-        const MY_SERVER_LOANS = "http://127.0.0.1:5000/loans/"
+        const MY_SERVER_BOOKS = "https://artyoms-library.onrender.com/books/"
+        const MY_SERVER_CUSTOMERS = "https://artyoms-library.onrender.com/customers/"
+        const MY_SERVER_LOANS = "https://artyoms-library.onrender.com/loans/"
 
 
         ////////////////////////// DISPLAY ALL BOOKS ////////////////////////////////////////
@@ -437,50 +437,17 @@
         ////////////////////////// LOAN A BOOK ////////////////////////////////////////
 
         // post (Create)
-        // const addLoan = async () => {
-        //     await axios.post(MY_SERVER_LOANS, {
-        //         custumerID: custumerID.value,
-        //         bookID: bookID.value,
-        //         loanDate: loanDate.value,
-        //         returnDate: returnDate.value,
-        //     }).then((res) => console.log(res.data))
-            // loadUnActiveLoans()
-        // }
-
         const addLoan = async () => {
-    let books = [];
-    let customers = [];
-    let bks = document.getElementById("booksList")
-    for (let i = 0; i < bks.options.length; i++) {
-        await books.push(bks.options[i].value)
-    }
-    let cust = document.getElementById("customersList")
-    for (let i = 0; i < cust.options.length; i++) {
-        await customers.push(cust.options[i].value)
-    }
-    // checks if input is not empty and if book id or customer id is not exist and opens toastify notification
-    if (document.getElementById("cId").value == "" || document.getElementById("bId").value == "" || document.getElementById("lDate").value == "") { invalidInput() }
-    else if (!customers.includes(document.getElementById("cId").value)) { invalidFkInput() }
-    else if (!books.includes(document.getElementById("bId").value)) { invalidFkInput() }
-    else {
-        // Create loan in DB using POST method and JSON format
-        const res = JSON.parse(`{
-            "customerID":${document.getElementById("cId").value},
-            "bookID":${document.getElementById("bId").value},
-            "loanDate":"${document.getElementById("lDate").value}"
-            }`);
-        console.log(res)
-        await fetch(MY_SERVER_LOANS, {
-            method: "POST",
-            headers: {
-                'Accept': 'application/json',
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(res)
-        })
-        location.reload()
-    }
-}
+            await axios.post(MY_SERVER_LOANS, {
+                custumerID: custumerID.value,
+                bookID: bookID.value,
+                loanDate: loanDate.value,
+                returnDate: returnDate.value,
+            }).then((res) => console.log(res.data))
+            loadUnActiveLoans()
+        }
+
+   
 
         ////////////////////////// DEFINE CURRENT DATE ////////////////////////////////////////
         const date = new Date();
