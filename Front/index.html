@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Artyom's Library</title>
+    <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+
+
+
+
+</head>
+
+<body>
+
+
+    <!-- Books -->
+    <h2>Add a book</h2><br>
+    Book name<input id="b_name">
+    <br>Author<input id="author">
+    <br>Year of publish
+    <select id='year_published'>
+        <option value="">Select a year</option>
+        <script>
+            let dateDropdown = document.getElementById('year_published');
+            let currentYear = new Date().getFullYear();
+            let earliestYear = 2000;
+            while (currentYear >= earliestYear) {
+                let dateOption = document.createElement('option');
+                dateOption.text = currentYear;
+                dateOption.value = currentYear;
+                dateDropdown.add(dateOption);
+                currentYear -= 1;
+            }
+        </script>
+    </select>
+    <br>book Type<select id="loanType">
+        <option value="">Select a type</option>
+        <option value="1">Up to 10 days</option>
+        <option value="2">Up to 5 days</option>
+        <option value="3">Up to 2 days</option>
+    </select>
+    <br><br>
+    <button onclick="addBook()">Add new book to library</button>
+    <br><br>
+    <h2>Books</h2>
+    <input placeholder="Search for books" id="search_Book" onkeyup="searchBook()">
+    <!-- Book Search -->
+    <script>
+        // search for book by name
+        const searchBook = () => {
+            var input, filter, table, tr, td, i, txtValue;
+            input = document.getElementById("search_Book");
+            filter = input.value.toUpperCase();
+            table = document.getElementById("bookTable");
+            tr = table.getElementsByTagName("tr");
+            for (i = 0; i < tr.length; i++) {
+                td = tr[i].getElementsByTagName("td")[1];
+                if (td) {
+                    txtValue = td.textContent || td.innerText;
+                    if (txtValue.toUpperCase().indexOf(filter) > -1) {
+                        tr[i].style.display = "";
+                    } else {
+                        tr[i].style.display = "none";
+                    }
+                }
+            }
+        }
+    </script>
+    <br><br>
+    <div id="book_display"></div>
+    <hr>
+    <hr>
+
+    <!-- Customers -->
+    <h2>Add a Customer</h2><br>
+    Customer name<input id="cus_name">
+    <br>City<input id="city">
+    <br>Age<input id="age">
+    <br><br>
+    <button onclick="addCustomer()">Add new Customer to List</button>
+    <br><br>
+    <h2>Customers</h2>
+    <input placeholder="Search for customer" id="search_customer" onkeyup="searchCustomer()">
+    <!-- Book Search -->
+    <script>
+        // search for book by name
+        const searchCustomer = () => {
+            var input, filter, table, tr, td, i, txtValue;
+            input = document.getElementById("search_customer");
+            filter = input.value.toUpperCase();
+            table = document.getElementById("customerTable");
+            tr = table.getElementsByTagName("tr");
+            for (i = 0; i < tr.length; i++) {
+                td = tr[i].getElementsByTagName("td")[1];
+                if (td) {
+                    txtValue = td.textContent || td.innerText;
+                    if (txtValue.toUpperCase().indexOf(filter) > -1) {
+                        tr[i].style.display = "";
+                    } else {
+                        tr[i].style.display = "none";
+                    }
+                }
+            }
+        }
+    </script>
+    <br><br>
+    <div id="customer_display"></div>
+
+    <hr>
+    <hr>
+
+    <!-- Loans -->
+    <h2>Loans</h2><br>
+    customer id <input id="custumerID"><br>
+    book id <input id="bookID"><br>
+    Loan date <input type="date" id="loanDate"><br>
+    Return date <input type="date" id="returnDate"><br>
+    <!-- loan mode <select id="loan_mode">
+        <option value="">Choose</option>
+        <option value="1">Active</option>
+        <option value="2">Inactive</option> -->
+    <!-- </select> -->
+    <br><br>
+    <button onclick="addLoan()">Add new book loan</button><br><br>
+    <div id="loans_display"></div>
+
+
+    <script>
+        const MY_SERVER_BOOKS = "http://127.0.0.1:5000/books/"
+        const MY_SERVER_CUSTOMERS = "http://127.0.0.1:5000/customers/"
+        const MY_SERVER_LOANS = "http://127.0.0.1:5000/loans/"
+
+
+        ////////////////////////// DISPLAY ALL BOOKS ////////////////////////////////////////
+
+        const loadBooks = async () => {
+            let bookType = ""
+
+            let msg = `<table id="bookTable" style="width:100%" border="" >
+                <tr>
+                    <th>Actions</th>
+                    <th>Book's Name</th>
+                    <th>Book's Author</th>
+                    <th>Book's Year of publish</th>
+                    <th>Book's maximum time of loan</th>
+                </tr>`
+            let res = ""
+            let booktypes = [1,2,3]
+            await fetch(MY_SERVER_BOOKS, { method: "GET" }).then((response) => response.json()).then((data) => res = data); //get data from server
+            console.log(res) //display data in console
+
+            res.map(b => {
+                // user friendly book type
+                if (b["loanType"] == 1) bookType = "up to 10 days"
+                else if (b["loanType"] == 2) bookType = "up to 5 days"
+                else if (b["loanType"] == 3) bookType = "up to 2 days"
+                // Fill table with data
+
+                msg +=
+                    `<tr>
+            <td><button onclick='updBook(${b.id})'>Update Book</button>
+            <button onclick='delBook(${b.id})'>Delete Book</button></td>
+            <td>${b["b_name"]}</td>
+            <td>${b["author"]}</td>
+            <td>${b["year"]} </td>
+            <td>${bookType}</td>
+            </tr>
+                `}).join("") //build display
+            document.getElementById("book_display").innerHTML = msg;
+
+        }
+        loadBooks()
+
+        ////////////////////////// ADD A NEW BOOK ////////////////////////////////////////
+
+        // post (Create)
+        const addBook = async () => {
+
+            await axios.post(MY_SERVER_BOOKS, {
+                b_name: b_name.value,
+                author: author.value,
+                year: year_published.value,
+                loanType: loanType.value
+            }).then((res) => console.log(res.data))
+            // loadBooks()
+        }
+
+        ////////////////////////// DELETE A BOOK ////////////////////////////////////////
+
+        //delete (delete)
+        const delBook = async (id) => {
+            console.log(id)
+            await axios.delete(MY_SERVER_BOOKS + id).then((res) => book_display.innerHTML = `<h1>book id number ${id} deleted</h1>`)
+            // loadBooks()
+        }
+
+        ////////////////////////// UPDATE A BOOK ////////////////////////////////////////
+
+        const updBook = async (id) => {
+            // put (update)
+            const res = await axios.put(MY_SERVER_BOOKS + id, {
+                b_name: b_name.value,
+                author: author.value,
+                year: year_published.value,
+                loanType: loanType.value
+            })
+            console.log(res)
+            // loadBooks()
+        }
+
+
+        //////////////////////////// DISPLAY ALL CUSTOMERS ////////////////////////////////////////
+
+        const loadCustomers = async () => {
+
+
+            let msg = `<table id="customerTable" style="width:100%" border="" >
+                <tr>
+                    <th>Actions</th>
+                    <th>Name</th>
+                    <th>City</th>
+                    <th>Age</th>
+                </tr>`
+            let res = ""
+            await fetch(MY_SERVER_CUSTOMERS, { method: "GET" }).then((response) => response.json()).then((data) => res = data); //get data from server
+            console.log(res) //display data in console
+
+            res.map(b =>
+                msg +=
+                `<tr>
+            <td><button onclick='updCustomer(${b.id})'>Update Customer</button>
+            <button onclick='delCustomer(${b.id})'>Delete Customer</button></td>
+            <td>${b["cus_name"]}</td>
+            <td>${b["city"]}</td>
+            <td>${b["age"]} </td>
+            </tr>
+            `).join("") //build display
+            document.getElementById("customer_display").innerHTML = msg;
+
+        }
+        loadCustomers()
+
+        ////////////////////////// ADD A CUSTOMER ////////////////////////////////////////
+
+        // post (Create)
+        const addCustomer = async () => {
+
+            await axios.post(MY_SERVER_CUSTOMERS, {
+                cus_name: cus_name.value,
+                city: city.value,
+                age: age.value,
+            }).then((res) => console.log(res.data))
+            // loadCustomers()
+        }
+
+        ////////////////////////// DELETE A CUSTOMER ////////////////////////////////////////
+
+        //delete (delete)
+        const delCustomer = async (id) => {
+            console.log(id)
+            await axios.delete(MY_SERVER_CUSTOMERS + id).then((res) => customer_display.innerHTML = `<h1>Customer id number ${id} deleted</h1>`)
+            // loadCustomers()
+        }
+
+        ////////////////////////// UPDATE A CUSTOMER ////////////////////////////////////////
+
+        const updCustomer = async (id) => {
+            // put (update)
+            const res = await axios.put(MY_SERVER_CUSTOMERS + id, {
+                cus_name: cus_name.value,
+                city: city.value,
+                age: age.value,
+            })
+            console.log(res)
+            // loadCustomers()
+        }
+
+
+        ////////////////////////// DISPLAY ACTIVE LOANS ////////////////////////////////////////
+
+
+        // const loadActiveLoans = async () => {
+            
+            
+        //     let msg = `<table id="loanTable" style="width:100%" border="" >
+        //         <tr>
+        //             <th>Actions</th>
+        //             <th>Customer Name</th>
+        //             <th>Loaned Book Name</th>
+        //             <th>Loan Date</th>
+        //             <th>Loan Return Date</th>
+        //             <th>Status</th>
+        //         </tr>`
+        //         let res = ""
+        //     await fetch(MY_SERVER_LOANS, { method: "GET" }).then((response) => response.json()).then((data) => res = data); //get data from server
+        //     console.log(res) //display data in console
+
+        //     res.map(l => 
+            
+        //     msg +=
+        //     `<tr>
+        //         <td><button class="btn btn-info">No Action Required</button></td>
+        //         <td>${l["cust_name"]}</td>
+        //         <td>${l["b_name"]}</td>
+        //         <td>${l["loanDate"]}</td>
+        //         <td>${l["returnDate"]}</td>
+        //         <td>RETURNED <br/> ${status}</td></tr>
+        //     `).join("") //build display
+        //         document.getElementById("loans_display").innerHTML = msg;
+
+        // }
+        // loadActiveLoans()
+
+        
+        const loadActiveLoans = async () => {
+
+
+            let msg = `<table id="loanTable" style="width:100%" border="" >
+                <tr>
+                    <th>Actions</th>
+                    <th>Customer Name</th>
+                    <th>Loaned Book Name</th>
+                    <th>Loan Date</th>
+                    <th>Loan Return Date</th>
+                    <th>Status</th>
+                </tr>`
+
+            let loans1 = []; // Create array contains 3 arrays with data from 3 tables
+            let bookName, CustName = "";
+            let active = true;
+            await fetch(MY_SERVER_LOANS, { method: "GET" }).then((response) => response.json()).then((data) => loans1.push(data)); // GET method to read loans from DB and push to array
+            await fetch(MY_SERVER_BOOKS, { method: "GET" }).then((response) => response.json()).then((data) => loans1.push(data)); // GET method to read books from DB and push to array
+            await fetch(MY_SERVER_CUSTOMERS, { method: "GET" }).then((response) => response.json()).then((data) => loans1.push(data)); // GET method to read customers from DB and push to array
+            console.log(loans1) // prints array to console
+            loans1[0].map((loan, i) => {
+                // calculate today's date and loan date to check loan status
+                let d1 = new Date();
+                let d2 = new Date(loan["loanDate"])
+                let status = "ON TIME"
+                if (loan["returnDate"] != "null") {
+                    d1 = new Date(loan["returnDate"])
+                    active == false
+                }
+                var dif = Math.abs(d1 - d2);
+                d = Math.round(dif / (1000 * 3600 * 24)) - 1
+                console.log(d + " Days");
+
+                // Set status using above calculation
+                if (loan["bookType"] == 1 && d > 10) status = "LATE"
+                else if (loan["bookType"] == 1 && d == 10) status = "DUE TODAY"
+                else if (loan["bookType"] == 2 && d > 5) status = "LATE"
+                else if (loan["bookType"] == 2 && d == 5) status = "DUE TODAY"
+                else if (loan["bookType"] == 3 && d > 2) status = "LATE"
+                else if (loan["bookType"] == 3 && d == 2) status = "DUE TODAY"
+
+                loans1[1].map(book => {
+                    if (loan["bookID"] == book["id"]) {
+                        bookName = book["b_name"]
+                    }
+                })
+                loans1[2].map(cust => {
+                    if (loan["customerID"] == cust["id"]) {
+                        CustName = cust["cus_name"]
+                    }
+                })
+                // fills table with late loans data
+                if (status == "LATE") {
+                    if (loan["returnDate"] == "null") {
+                        msg += `<tr>
+                <td><button class="btn btn-warning" onclick="returnBook(${loan["id"]})">Return Book</button></td>
+                <td>${CustName}</td>
+                <td>${bookName}</td>
+                <td>${loan["loanDate"]}</td>
+                <td><form class="formContainer"><input type="date" max="${d1.getFullYear()}-${d1.getMonth() + 1}-${d1.getDate()}" id="rDate${loan["id"]}" placeholder="Return Date" name="rDate" required ></form></td>
+                <td>${status}</td></tr>`
+                    }
+                    else {
+                        msg += `<tr>
+                <td><button class="btn btn-info">No Action Required</button></td>
+                <td>${CustName}</td>
+                <td>${bookName}</td>
+                <td>${loan["loanDate"]}</td>
+                <td>${loan["returnDate"]}</td>
+                <td>RETURNED <br/> ${status}</td></tr>`
+                    }
+                }
+                // fills table with DUE TODAY loans data        
+                else if (status == "DUE TODAY") {
+                    if (loan["returnDate"] == "null") {
+                        msg += `<tr>
+                <td><button class="btn btn-warning" onclick="returnBook(${loan["id"]})">Return Book</button></td>
+                <td>${CustName}</td>
+                <td>${bookName}</td>
+                <td>${loan["loanDate"]}</td>
+                <td><form class="formContainer"><input type="date" max="${d1.getFullYear()}-${d1.getMonth() + 1}-${d1.getDate()}" id="rDate${loan["id"]}" placeholder="Return Date" name="rDate" max="${d1}" required ></form></td>
+                <td>${status}</td></tr>`
+                    }
+                    else {
+                        msg += `<tr>
+                <td><button class="btn btn-info">No Action Required</button></td>
+                <td>${CustName}</td>
+                <td>${bookName}</td>
+                <td>${loan["loanDate"]}</td>
+                <td>${loan["returnDate"]}</td>
+                <td>RETURNED <br/> ON TIME</td></tr>`
+                    }
+                }
+                // fills table with on time loans data
+                else if (status == "ON TIME") {
+                    if (loan["returnDate"] == "null") {
+                        msg += `<tr>
+                <td><button class="btn btn-warning" onclick="returnBook(${loan["id"]})">Return Book</button></td>
+                <td>${CustName}</td>
+                <td>${bookName}</td>
+                <td>${loan["loanDate"]}</td>
+                <td><form class="formContainer"><input type="date" max="${d1.getFullYear()}-${d1.getMonth() + 1}-${d1.getDate()}" id="rDate${loan["id"]}" required ></form></td>
+                <td>${status}</td></tr>`
+                    }
+                    else {
+                        msg += `<tr>
+                <td><button class="btn btn-info">No Action Required</button></td>
+                <td>${CustName}</td>
+                <td>${bookName}</td>
+                <td>${loan["loanDate"]}</td>
+                <td>${loan["returnDate"]}</td>
+                <td>RETURNED <br/> ${status}</td></tr>`
+                    }
+                }
+            }).join("")
+            document.getElementById("loans_display").innerHTML = msg
+        }
+        loadActiveLoans()
+
+        ////////////////////////// LOAN A BOOK ////////////////////////////////////////
+
+        // post (Create)
+        // const addLoan = async () => {
+        //     await axios.post(MY_SERVER_LOANS, {
+        //         custumerID: custumerID.value,
+        //         bookID: bookID.value,
+        //         loanDate: loanDate.value,
+        //         returnDate: returnDate.value,
+        //     }).then((res) => console.log(res.data))
+            // loadUnActiveLoans()
+        // }
+
+        const addLoan = async () => {
+    let books = [];
+    let customers = [];
+    let bks = document.getElementById("booksList")
+    for (let i = 0; i < bks.options.length; i++) {
+        await books.push(bks.options[i].value)
+    }
+    let cust = document.getElementById("customersList")
+    for (let i = 0; i < cust.options.length; i++) {
+        await customers.push(cust.options[i].value)
+    }
+    // checks if input is not empty and if book id or customer id is not exist and opens toastify notification
+    if (document.getElementById("cId").value == "" || document.getElementById("bId").value == "" || document.getElementById("lDate").value == "") { invalidInput() }
+    else if (!customers.includes(document.getElementById("cId").value)) { invalidFkInput() }
+    else if (!books.includes(document.getElementById("bId").value)) { invalidFkInput() }
+    else {
+        // Create loan in DB using POST method and JSON format
+        const res = JSON.parse(`{
+            "customerID":${document.getElementById("cId").value},
+            "bookID":${document.getElementById("bId").value},
+            "loanDate":"${document.getElementById("lDate").value}"
+            }`);
+        console.log(res)
+        await fetch(MY_SERVER_LOANS, {
+            method: "POST",
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(res)
+        })
+        location.reload()
+    }
+}
+
+        ////////////////////////// DEFINE CURRENT DATE ////////////////////////////////////////
+        const date = new Date();
+
+        let day = date.getDate();
+        let month = date.getMonth() + 1;
+        let year = date.getFullYear();
+
+        // This arrangement can be altered based on how we want the date's format to appear.
+        let currentDate = `${day}/${month}/${year}`;
+        console.log(currentDate); // "17-6-2022"
+        console.log(loanDate)
+
+
+
+
+    </script>
+
+
+
+</body>
+
+</html>
